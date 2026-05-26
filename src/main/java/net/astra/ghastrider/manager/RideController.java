@@ -55,8 +55,17 @@ public final class RideController {
         if (!ok) {
             return false;
         }
-        playerToGhast.put(player.getUniqueId(), ghast.getUniqueId());
-        ghastToPlayer.put(ghast.getUniqueId(), player.getUniqueId());
+        UUID playerId = player.getUniqueId();
+        UUID ghastId = ghast.getUniqueId();
+        // Если у этого ghast уже была пара (например, после prune не очищенная) — заменяем атомарно.
+        UUID prevPlayer = ghastToPlayer.put(ghastId, playerId);
+        if (prevPlayer != null && !prevPlayer.equals(playerId)) {
+            playerToGhast.remove(prevPlayer, ghastId);
+        }
+        UUID prevGhast = playerToGhast.put(playerId, ghastId);
+        if (prevGhast != null && !prevGhast.equals(ghastId)) {
+            ghastToPlayer.remove(prevGhast, playerId);
+        }
 
         // Managed Гаст всегда с aware=false; пилот работает через ванильную упряжку (body slot).
         ghast.setTarget(null);
@@ -68,18 +77,21 @@ public final class RideController {
      * Принудительно ссадить игрока (логаут, команда, ошибка).
      */
     public void dismount(Player player) {
-        UUID ghastId = playerToGhast.remove(player.getUniqueId());
+        UUID playerId = player.getUniqueId();
+        UUID ghastId = playerToGhast.remove(playerId);
         if (ghastId == null) {
             // На случай если в map нет, но физически сидит — всё равно очистим vehicle.
             Entity vehicle = player.getVehicle();
             if (vehicle instanceof HappyGhast g) {
                 g.removePassenger(player);
-                ghastToPlayer.remove(g.getUniqueId());
+                // Удаляем только если запись действительно указывает на этого игрока.
+                ghastToPlayer.remove(g.getUniqueId(), playerId);
                 resetGhast(g);
             }
             return;
         }
-        ghastToPlayer.remove(ghastId);
+        // Удаляем строго свою пару: ghastId -> playerId.
+        ghastToPlayer.remove(ghastId, playerId);
 
         HappyGhast ghast = findGhast(ghastId);
         if (ghast != null) {
@@ -95,9 +107,10 @@ public final class RideController {
      * Если на гасте кто-то сидит — ссадить (используется при removeHarness).
      */
     public void dismountIfRiding(HappyGhast ghast) {
-        UUID playerId = ghastToPlayer.remove(ghast.getUniqueId());
+        UUID ghastId = ghast.getUniqueId();
+        UUID playerId = ghastToPlayer.remove(ghastId);
         if (playerId != null) {
-            playerToGhast.remove(playerId);
+            playerToGhast.remove(playerId, ghastId);
         }
         for (Entity passenger : new HashSet<>(ghast.getPassengers())) {
             ghast.removePassenger(passenger);
@@ -109,12 +122,15 @@ public final class RideController {
      * Синхронизация с EntityDismountEvent — игрок слез сам.
      */
     public void notifyDismounted(Player player, Entity vehicle) {
-        UUID expectedGhast = playerToGhast.remove(player.getUniqueId());
+        UUID playerId = player.getUniqueId();
+        UUID expectedGhast = playerToGhast.remove(playerId);
         if (expectedGhast != null) {
-            ghastToPlayer.remove(expectedGhast);
+            ghastToPlayer.remove(expectedGhast, playerId);
         }
         if (vehicle instanceof HappyGhast g) {
-            ghastToPlayer.remove(g.getUniqueId());
+            // Удалим только если запись действительно указывает на этого игрока,
+            // чтобы не выбить чужую валидную пару.
+            ghastToPlayer.remove(g.getUniqueId(), playerId);
             resetGhast(g);
         }
     }
@@ -137,8 +153,13 @@ public final class RideController {
         return ghastToPlayer.containsKey(ghast.getUniqueId());
     }
 
+    /**
+     * Возвращает иммутабельный снимок текущих пар player -> ghast. Снимок защищает
+     * вызывающую сторону от ConcurrentModification, если она вызывает методы,
+     * мутирующие внутренние карты (notifyDismounted/dismount) во время итерации.
+     */
     public Set<Map.Entry<UUID, UUID>> entries() {
-        return playerToGhast.entrySet();
+        return Set.copyOf(playerToGhast.entrySet());
     }
 
     /**
@@ -150,18 +171,42 @@ public final class RideController {
         Iterator<Map.Entry<UUID, UUID>> it = playerToGhast.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<UUID, UUID> e = it.next();
-            Player p = Bukkit.getPlayer(e.getKey());
-            Entity g = Bukkit.getEntity(e.getValue());
+            UUID playerId = e.getKey();
+            UUID ghastId = e.getValue();
+            Player p = Bukkit.getPlayer(playerId);
+            Entity g = Bukkit.getEntity(ghastId);
             if (p == null || !p.isOnline() || !(g instanceof HappyGhast ghast) || ghast.isDead()) {
                 it.remove();
-                ghastToPlayer.remove(e.getValue());
-                if (g instanceof HappyGhast ghast2) {
+                // Удаляем строго парную запись, чтобы не выбить новую валидную пару,
+                // если ghast был переиспользован между тиками.
+                ghastToPlayer.remove(ghastId, playerId);
+                if (g instanceof HappyGhast ghast2 && !ghast2.isDead()) {
                     resetGhast(ghast2);
                 }
                 removed++;
             }
         }
+        // Дополнительно: отлавливаем orphan-записи в обратной карте
+        // (ghastId без зеркальной пары в playerToGhast).
+        Iterator<Map.Entry<UUID, UUID>> rit = ghastToPlayer.entrySet().iterator();
+        while (rit.hasNext()) {
+            Map.Entry<UUID, UUID> e = rit.next();
+            UUID ghastId = e.getKey();
+            UUID playerId = e.getValue();
+            UUID mirror = playerToGhast.get(playerId);
+            if (mirror == null || !mirror.equals(ghastId)) {
+                rit.remove();
+            }
+        }
         return removed;
+    }
+
+    /**
+     * Полная очистка состояния (используется при выгрузке плагина).
+     */
+    public void clearAll() {
+        playerToGhast.clear();
+        ghastToPlayer.clear();
     }
 
     public JavaPlugin getPlugin() {
