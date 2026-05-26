@@ -1,0 +1,22 @@
+name: GhastRider
+version: '${version}'
+main: net.astra.ghastrider.GhastRiderPlugin
+api-version: '1.21'
+authors: [ TemDem (Rennocki) ]
+depend: [ProtocolLib]
+description: Personal rideable Ghast with custom harnesses (standalone, no external item plugins).
+commands:
+  ghastrider:
+    description: GhastRider main command.
+    aliases: [ gr ]
+    usage: /<command> <reload|info|unmount>
+permissions:
+  ghastrider.use:
+    description: Allows using harnesses and riding owned ghasts.
+    default: true
+  ghastrider.admin:
+    description: Allows reloading config and admin operations.
+    default: op
+  ghastrider.bypass.owner:
+    description: Bypass ownership checks (admin).
+    default: op

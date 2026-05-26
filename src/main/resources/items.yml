@@ -1,0 +1,112 @@
+# =====================================================================
+#  GhastRider — определения кастомных предметов (Standalone)
+# =====================================================================
+#  Плагин сам генерирует ItemStack'и по этим описаниям и помечает их
+#  PDC-ключом ghastrider:custom_item для защиты от подделок ванильными
+#  предметами. Менять можно material, custom-model-data, имя, лор, glow.
+#  ID предмета (ключ секции) менять НЕ рекомендуется — он используется
+#  в config.yml (привязка тиров), recipes.yml и в команде /gr give.
+# =====================================================================
+
+items:
+  # ---------------------- Упряжки (5 тиров) ----------------------
+  base_harness:
+    material: SADDLE
+    custom-model-data: 1000
+    display-name: "<gradient:#c0c0c0:#ffffff><b>Базовая упряжка</b></gradient>"
+    lore:
+      - "<gray>Простая сбруя для управления Счастливым Гастом."
+      - "<dark_gray>Тир: <white>Базовая</white>"
+      - ""
+      - "<dark_gray>ПКМ по Счастливому Гасту, чтобы надеть."
+    glow: false
+
+  iron_harness:
+    material: SADDLE
+    custom-model-data: 1001
+    display-name: "<gradient:#cfd8dc:#90a4ae><b>Железная упряжка</b></gradient>"
+    lore:
+      - "<gray>Усиленная стальными вставками."
+      - "<dark_gray>Тир: <white>Железо</white>"
+      - ""
+      - "<dark_gray>ПКМ по Счастливому Гасту, чтобы надеть."
+    glow: false
+
+  gold_harness:
+    material: SADDLE
+    custom-model-data: 1002
+    display-name: "<gradient:#ffe066:#ffb300><b>Золотая упряжка</b></gradient>"
+    lore:
+      - "<gray>Роскошная и быстрая."
+      - "<dark_gray>Тир: <gold>Золото</gold>"
+      - ""
+      - "<dark_gray>ПКМ по Счастливому Гасту, чтобы надеть."
+    glow: true
+
+  diamond_harness:
+    material: SADDLE
+    custom-model-data: 1003
+    display-name: "<gradient:#5cdcff:#a0f0ff><b>Алмазная упряжка</b></gradient>"
+    lore:
+      - "<gray>Прочная сбруя для Счастливого Гаста."
+      - "<dark_gray>Тир: <aqua>Алмаз</aqua>"
+      - ""
+      - "<dark_gray>ПКМ по Счастливому Гасту, чтобы надеть."
+    glow: true
+
+  netherite_harness:
+    material: SADDLE
+    custom-model-data: 1004
+    display-name: "<gradient:#5d4037:#ff6e40><b>Незеритовая упряжка</b></gradient>"
+    lore:
+      - "<gray>Венец инженерной мысли Незера."
+      - "<dark_gray>Тир: <#ff6e40>Незерит</#ff6e40>"
+      - ""
+      - "<dark_gray>ПКМ по Счастливому Гасту, чтобы надеть."
+    glow: true
+
+  # ---------------------- Эссенции (5 типов) ---------------------
+  essence_speed_1:
+    material: NETHER_STAR
+    custom-model-data: 2001
+    display-name: "<#7ee8ff><b>Эссенция Скорости I</b>"
+    lore:
+      - "<gray>Сгусток ветра."
+      - "<dark_gray>Используется в крафте."
+    glow: true
+
+  essence_speed_2:
+    material: NETHER_STAR
+    custom-model-data: 2002
+    display-name: "<#00bcd4><b>Эссенция Скорости II</b>"
+    lore:
+      - "<gray>Концентрированный ветер."
+      - "<dark_gray>Используется в крафте."
+    glow: true
+
+  essence_regen_1:
+    material: NETHER_STAR
+    custom-model-data: 2003
+    display-name: "<#ff8aa3><b>Эссенция Регенерации I</b>"
+    lore:
+      - "<gray>Тёплый пульс жизни."
+      - "<dark_gray>Используется в крафте."
+    glow: true
+
+  essence_regen_2:
+    material: NETHER_STAR
+    custom-model-data: 2004
+    display-name: "<#e91e63><b>Эссенция Регенерации II</b>"
+    lore:
+      - "<gray>Сильный пульс жизни."
+      - "<dark_gray>Используется в крафте."
+    glow: true
+
+  essence_fire_1:
+    material: NETHER_STAR
+    custom-model-data: 2005
+    display-name: "<#ff7043><b>Эссенция Пламени I</b>"
+    lore:
+      - "<gray>Безопасный жар Незера."
+      - "<dark_gray>Используется в крафте."
+    glow: true

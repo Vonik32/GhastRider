@@ -1,0 +1,182 @@
+# =====================================================================
+#  GhastRider — рецепты крафта (Standalone)
+# =====================================================================
+#  Все рецепты — нативные ShapedRecipe через Bukkit.addRecipe().
+#  Безопасность: для type=custom используется RecipeChoice.ExactChoice,
+#  то есть подмена обычной звездой Незера/седлом не сработает —
+#  ItemStack.isSimilar() сверит ItemMeta и PDC-маркер ghastrider:custom_item.
+#
+#  shape: 1..3 строк по 1..3 символа. Пробел = пусто.
+#  ingredients: маппинг символ -> {type: vanilla|custom, ...}.
+# =====================================================================
+
+recipes:
+  # ---------------------- Эссенции ---------------------------------
+  essence_speed_1:
+    result: essence_speed_1
+    amount: 1
+    shape:
+      - " F "
+      - "FNF"
+      - " F "
+    ingredients:
+      F:
+        type: vanilla
+        material: FEATHER
+      N:
+        type: vanilla
+        material: NETHER_STAR
+
+  essence_speed_2:
+    result: essence_speed_2
+    amount: 1
+    shape:
+      - " S "
+      - "SBS"
+      - " S "
+    ingredients:
+      S:
+        type: custom
+        item: essence_speed_1
+      B:
+        type: vanilla
+        material: BLAZE_ROD
+
+  essence_regen_1:
+    result: essence_regen_1
+    amount: 1
+    shape:
+      - " G "
+      - "GNG"
+      - " G "
+    ingredients:
+      G:
+        type: vanilla
+        material: GLISTERING_MELON_SLICE
+      N:
+        type: vanilla
+        material: NETHER_STAR
+
+  essence_regen_2:
+    result: essence_regen_2
+    amount: 1
+    shape:
+      - " R "
+      - "RGR"
+      - " R "
+    ingredients:
+      R:
+        type: custom
+        item: essence_regen_1
+      G:
+        type: vanilla
+        material: GHAST_TEAR
+
+  essence_fire_1:
+    result: essence_fire_1
+    amount: 1
+    shape:
+      - " M "
+      - "MNM"
+      - " M "
+    ingredients:
+      M:
+        type: vanilla
+        material: MAGMA_CREAM
+      N:
+        type: vanilla
+        material: NETHER_STAR
+
+  # ---------------------- Упряжки ---------------------------------
+  base_harness:
+    result: base_harness
+    amount: 1
+    shape:
+      - "LLL"
+      - "LSL"
+      - "III"
+    ingredients:
+      L:
+        type: vanilla
+        material: LEATHER
+      S:
+        type: vanilla
+        material: STRING
+      I:
+        type: vanilla
+        material: IRON_INGOT
+
+  iron_harness:
+    result: iron_harness
+    amount: 1
+    shape:
+      - "IRI"
+      - "IBI"
+      - "IRI"
+    ingredients:
+      I:
+        type: vanilla
+        material: IRON_BLOCK
+      R:
+        type: custom
+        item: essence_regen_1
+      B:
+        type: custom
+        item: base_harness
+
+  gold_harness:
+    result: gold_harness
+    amount: 1
+    shape:
+      - "GSG"
+      - "GHG"
+      - "GSG"
+    ingredients:
+      G:
+        type: vanilla
+        material: GOLD_BLOCK
+      S:
+        type: custom
+        item: essence_speed_1
+      H:
+        type: custom
+        item: iron_harness
+
+  diamond_harness:
+    result: diamond_harness
+    amount: 1
+    shape:
+      - "DSD"
+      - "DHD"
+      - "DRD"
+    ingredients:
+      D:
+        type: vanilla
+        material: DIAMOND_BLOCK
+      S:
+        type: custom
+        item: essence_speed_2
+      R:
+        type: custom
+        item: essence_regen_2
+      H:
+        type: custom
+        item: gold_harness
+
+  netherite_harness:
+    result: netherite_harness
+    amount: 1
+    shape:
+      - "NFN"
+      - "NHN"
+      - "NFN"
+    ingredients:
+      N:
+        type: vanilla
+        material: NETHERITE_INGOT
+      F:
+        type: custom
+        item: essence_fire_1
+      H:
+        type: custom
+        item: diamond_harness

@@ -1,0 +1,113 @@
+# =====================================================================
+#  GhastRider — основная конфигурация (Standalone)
+# =====================================================================
+#  Кастомные предметы определяются в items.yml. Здесь же тиры упряжек
+#  ссылаются на эти ID через item-id (имя ключа из items.yml).
+#  amplifier эффектов в формате Bukkit (0 = уровень I, 1 = уровень II ...).
+#  duration: -1 — бесконечный (постоянно перевыдаётся таском).
+#  flying-speed-multiplier / movement-speed-multiplier применяются как
+#  AttributeModifier с операцией MULTIPLY_SCALAR_1 (1.0 = +100%).
+# =====================================================================
+
+harness:
+  basic:
+    item-id: base_harness
+    regeneration:
+      enabled: true
+      amplifier: 0
+      duration: -1
+    fire-resistance: false
+    flying-speed-multiplier: 0.5
+    movement-speed-multiplier: 0.5
+    flight-speed-bonus: 0.5
+  iron:
+    item-id: iron_harness
+    regeneration:
+      enabled: true
+      amplifier: 0
+      duration: -1
+    fire-resistance: true
+    flying-speed-multiplier: 1.0
+    movement-speed-multiplier: 1.0
+    flight-speed-bonus: 1.0
+  gold:
+    item-id: gold_harness
+    regeneration:
+      enabled: true
+      amplifier: 1
+      duration: -1
+    fire-resistance: true
+    flying-speed-multiplier: 1.25
+    movement-speed-multiplier: 1.25
+    flight-speed-bonus: 1.25
+  diamond:
+    item-id: diamond_harness
+    regeneration:
+      enabled: true
+      amplifier: 1
+      duration: -1
+    fire-resistance: true
+    flying-speed-multiplier: 1.5
+    movement-speed-multiplier: 1.5
+    flight-speed-bonus: 1.5
+  netherite:
+    item-id: netherite_harness
+    regeneration:
+      enabled: true
+      amplifier: 1
+      duration: -1
+    fire-resistance: true
+    flying-speed-multiplier: 2.0
+    movement-speed-multiplier: 2.0
+    flight-speed-bonus: 2.0
+
+flight:
+  base-speed: 0.6
+  acceleration: 0.25
+  max-velocity: 3.0
+  vertical-look-factor: 1.0
+  disable-gravity-when-ridden: true
+  hover-when-sneaking: true
+  jump-boost: 0.6
+  rotate-pitch-factor: 0.3
+
+protection:
+  deny-damage-from-others: true
+  deny-owner-damage: true
+  immune-to-lava: true
+  immune-to-fire: true
+  immune-to-drowning: false
+  prevent-fireballs: true
+  prevent-targeting: true
+  prevent-mount-by-others: true
+  remove-when-far-away: false
+  persistent: true
+
+behavior:
+  set-aware-false: true
+  reapply-aware-interval-ticks: 20
+  # Если true — используется ProtocolLib для включения ванильного эффекта
+  # свечения (spectral arrow) только для владельца Счастливого Гаста.
+  owner-only-glowing: true
+  owner-only-glowing-interval-ticks: 10
+
+messages:
+  prefix: "<gradient:#ff7a7a:#ffd27a>[GhastRider]</gradient> "
+  not-owner: "<red>Это не ваш Счастливый Гаст.</red>"
+  already-harnessed: "<red>На этом Счастливом Гасте уже надета упряжка.</red>"
+  harness-applied: "<green>Упряжка <yellow><tier></yellow> надета.</green>"
+  harness-removed: "<green>Упряжка снята.</green>"
+  harness-swapped: "<green>Упряжка заменена на <yellow><tier></yellow>.</green>"
+  mount-success: "<green>Вы оседлали Счастливого Гаста.</green>"
+  dismount-success: "<gray>Вы слезли со Счастливого Гаста.</gray>"
+  no-permission: "<red>Нет прав.</red>"
+  reload-success: "<green>Конфиг перезагружен.</green>"
+  info-format: "<gray>Владелец: <white><owner></white> | Тир: <white><tier></white></gray>"
+  info-not-managed: "<gray>Этот Счастливый Гаст не под управлением плагина.</gray>"
+  info-no-target: "<red>Посмотрите на Счастливого Гаста.</red>"
+  give-success: "<green>Выдано <yellow><amount></yellow>x <white><item></white> игроку <yellow><player></yellow>.</green>"
+  give-unknown-item: "<red>Неизвестный предмет: <yellow><item></yellow>. Доступные: <gray><available></gray></red>"
+  give-unknown-player: "<red>Игрок не найден.</red>"
+  give-usage: "<gray>Использование: /gr give <player> <item_id> [amount]</gray>"
+
+data-version: 4
