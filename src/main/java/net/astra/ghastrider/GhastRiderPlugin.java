@@ -105,25 +105,36 @@ public final class GhastRiderPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // Порядок важен: сначала ссаживаем всех всадников (пока задачи ещё активны
+        // и могут безопасно отрабатывать), затем останавливаем задачи и снимаем рецепты.
+        if (rideController != null) {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (rideController.isRiding(p)) {
+                    try {
+                        rideController.dismount(p);
+                    } catch (Throwable t) {
+                        getLogger().warning("Ошибка при dismount игрока " + p.getName() + ": " + t.getMessage());
+                    }
+                }
+            }
+            // Полностью очищаем карты, чтобы не утекли UUID между reload-ами плагина
+            // (Bukkit держит экземпляр Plugin в classloader-е до сборки мусора).
+            rideController.clearAll();
+        }
         if (flightTask != null) {
             try {
                 flightTask.cancel();
             } catch (IllegalStateException ignored) {
                 // Не запущен — ок.
             }
+            flightTask = null;
         }
         if (glowingTask != null) {
             glowingTask.stop();
+            glowingTask = null;
         }
         if (recipeManager != null) {
             recipeManager.unregisterAll();
-        }
-        if (rideController != null) {
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                if (rideController.isRiding(p)) {
-                    rideController.dismount(p);
-                }
-            }
         }
         getLogger().info("GhastRider выключён.");
     }

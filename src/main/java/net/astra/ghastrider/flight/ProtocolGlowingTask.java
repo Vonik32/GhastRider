@@ -19,6 +19,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
 
 /**
  * Использует ProtocolLib для отправки пакета EntityMetadata,
@@ -37,18 +38,34 @@ public final class ProtocolGlowingTask {
     private final ProtocolManager protocolManager;
 
     private BukkitTask task;
+    private boolean warnedNoProtocolLib;
 
     public ProtocolGlowingTask(JavaPlugin plugin, ConfigManager configManager, GhastData ghastData) {
         this.plugin = plugin;
         this.configManager = configManager;
         this.ghastData = ghastData;
-        this.protocolManager = ProtocolLibrary.getProtocolManager();
+        ProtocolManager pm = null;
+        try {
+            pm = ProtocolLibrary.getProtocolManager();
+        } catch (Throwable t) {
+            // ProtocolLib не подгрузился — продолжаем без owner-индикации.
+            plugin.getLogger().log(Level.WARNING,
+                    "ProtocolLib недоступен, owner-only glowing отключён: " + t.getMessage());
+        }
+        this.protocolManager = pm;
     }
 
     public void start() {
         stop();
+        if (protocolManager == null) {
+            if (!warnedNoProtocolLib) {
+                plugin.getLogger().warning("ProtocolGlowingTask: ProtocolManager == null, задача не запущена.");
+                warnedNoProtocolLib = true;
+            }
+            return;
+        }
         BehaviorSettings bs = configManager.getBehaviorSettings();
-        if (!bs.ownerOnlyGlowing()) {
+        if (bs == null || !bs.ownerOnlyGlowing()) {
             return;
         }
         long period = Math.max(1L, bs.ownerOnlyGlowingIntervalTicks());
@@ -62,14 +79,23 @@ public final class ProtocolGlowingTask {
 
     public void stop() {
         if (task != null) {
-            task.cancel();
+            try {
+                task.cancel();
+            } catch (IllegalStateException ignored) {
+            }
             task = null;
         }
     }
 
     private void tick() {
+        if (protocolManager == null) {
+            return;
+        }
         for (var world : Bukkit.getWorlds()) {
             for (HappyGhast ghast : world.getEntitiesByClass(HappyGhast.class)) {
+                if (ghast == null || ghast.isDead() || !ghast.isValid()) {
+                    continue;
+                }
                 if (!ghastData.isManaged(ghast)) {
                     continue;
                 }
@@ -91,6 +117,9 @@ public final class ProtocolGlowingTask {
     }
 
     private void sendGlowingPacket(Player owner, HappyGhast ghast) {
+        if (owner == null || ghast == null || protocolManager == null) {
+            return;
+        }
         try {
             PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.ENTITY_METADATA);
             packet.getIntegers().write(0, ghast.getEntityId());
@@ -98,14 +127,13 @@ public final class ProtocolGlowingTask {
             // 1.21.11+ использует WrappedDataValue
             List<WrappedDataValue> dataValues = new ArrayList<>();
 
-            // Читаем текущие флаги (чтобы не затереть другие: on fire, sneaking и т.д., хотя для гаста это редко нужно)
-            // Но проще просто взять текущие из Bukkit, добавить Glowing и отправить
-            WrappedDataWatcher watcher = WrappedDataWatcher.getEntityWatcher(ghast);
+            // Читаем текущие флаги (чтобы не затереть другие: on fire, sneaking и т.д.)
             byte currentFlags = 0;
-            if (watcher.hasIndex(ENTITY_FLAGS_INDEX)) {
+            WrappedDataWatcher watcher = WrappedDataWatcher.getEntityWatcher(ghast);
+            if (watcher != null && watcher.hasIndex(ENTITY_FLAGS_INDEX)) {
                 Object flagObj = watcher.getObject(ENTITY_FLAGS_INDEX);
-                if (flagObj instanceof Byte) {
-                    currentFlags = (Byte) flagObj;
+                if (flagObj instanceof Byte b) {
+                    currentFlags = b;
                 }
             }
 
@@ -120,8 +148,13 @@ public final class ProtocolGlowingTask {
             packet.getDataValueCollectionModifier().write(0, dataValues);
 
             protocolManager.sendServerPacket(owner, packet);
-        } catch (Exception e) {
-            // Игнорируем ошибку при отправке
+        } catch (Throwable e) {
+            // Логируем редко, чтобы не засорять лог при системной поломке ProtocolLib.
+            if (!warnedNoProtocolLib) {
+                plugin.getLogger().log(Level.WARNING,
+                        "Не удалось отправить пакет glowing: " + e.getMessage());
+                warnedNoProtocolLib = true;
+            }
         }
     }
 }

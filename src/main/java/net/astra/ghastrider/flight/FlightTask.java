@@ -45,14 +45,15 @@ public final class FlightTask extends BukkitRunnable {
     public void run() {
         rideController.prune();
 
-        // Синхронизация ride-entries.
+        // Синхронизация ride-entries. entries() возвращает иммутабельный снимок,
+        // поэтому модификации карт внутри notifyDismounted/dismount безопасны.
         for (Map.Entry<UUID, UUID> entry : rideController.entries()) {
             Player player = Bukkit.getPlayer(entry.getKey());
             if (player == null || !player.isOnline()) {
                 continue;
             }
             Entity vehicle = Bukkit.getEntity(entry.getValue());
-            if (!(vehicle instanceof HappyGhast ghast) || ghast.isDead()) {
+            if (!(vehicle instanceof HappyGhast ghast) || ghast.isDead() || !ghast.isValid()) {
                 continue;
             }
             if (!ghast.getPassengers().contains(player)) {
@@ -63,8 +64,12 @@ public final class FlightTask extends BukkitRunnable {
         }
 
         // Поддержание состояния managed-Гастов: AI выключен, цели — нет.
+        // Iterate over a snapshot to avoid CME, when world plugin events spawn entities.
         for (var world : Bukkit.getWorlds()) {
             for (HappyGhast ghast : world.getEntitiesByClass(HappyGhast.class)) {
+                if (ghast == null || ghast.isDead() || !ghast.isValid()) {
+                    continue;
+                }
                 if (!ghastData.isManaged(ghast)) {
                     continue;
                 }

@@ -6,8 +6,11 @@ import net.astra.ghastrider.config.HarnessTier;
 import net.astra.ghastrider.data.GhastData;
 import net.astra.ghastrider.item.ItemManager;
 import net.astra.ghastrider.util.MessageUtil;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.HappyGhast;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -84,11 +87,15 @@ public final class HarnessManager {
             return InteractionResult.DENIED_UNKNOWN_TIER;
         }
 
+        // Сначала пытаемся списать предмет — если игрок умудрился сменить руку
+        // или предмет за тот же тик, операция отменяется без сайд-эффектов на гасте.
+        if (!consumeOne(player, hand, itemId)) {
+            return InteractionResult.DENIED_NOT_CUSTOM_ITEM;
+        }
+
         ghastData.apply(ghast, player.getUniqueId(), tier, itemId);
         buffService.apply(ghast, hc);
         applyVanillaHarness(ghast);
-
-        consumeOne(player, hand);
 
         messageUtil.send(player, "harness-applied",
                 MessageUtil.placeholder("tier", tier.name()));
@@ -115,9 +122,11 @@ public final class HarnessManager {
         clearVanillaHarness(ghast);
         // Возвращаем Гасту способность летать самостоятельно.
         ghast.setAware(true);
-        org.bukkit.attribute.AttributeInstance kb = ghast.getAttribute(org.bukkit.attribute.Attribute.KNOCKBACK_RESISTANCE);
+        AttributeInstance kb = ghast.getAttribute(Attribute.KNOCKBACK_RESISTANCE);
         if (kb != null) {
-            kb.setBaseValue(0.0);
+            // Сбрасываем на ванильное значение по умолчанию вместо жёсткой нули,
+            // чтобы корректно восстановить поведение моба при будущих обновлениях ядра.
+            kb.setBaseValue(kb.getDefaultValue());
         }
 
         dropOrGive(player, ghast.getLocation(), itemId, dropInWorld);
@@ -156,9 +165,14 @@ public final class HarnessManager {
 
         String oldItemId = ghastData.getHarnessItemId(ghast);
 
+        // Сначала списываем новую упряжку — если предмет внезапно исчез из руки,
+        // не трогаем уже надетую и не дублируем дроп.
+        if (!consumeOne(player, hand, newItemId)) {
+            return InteractionResult.DENIED_NOT_CUSTOM_ITEM;
+        }
+
         ghastData.updateTier(ghast, newTier, newItemId);
         buffService.apply(ghast, newHc);
-        consumeOne(player, hand);
         dropOrGive(player, player.getLocation(), oldItemId, false);
 
         messageUtil.send(player, "harness-swapped",
@@ -179,14 +193,28 @@ public final class HarnessManager {
         return itemManager.createStack(itemId, 1);
     }
 
-    private void consumeOne(Player player, EquipmentSlot hand) {
+    /**
+     * Списать один экземпляр предмета из указанной руки, проверив, что это всё ещё
+     * та же кастомная упряжка, которую мы намереваемся применить. В креативе предмет
+     * не списывается, но операция считается успешной.
+     *
+     * @return true если предмет всё ещё валиден (или режим креатив) и можно
+     *         продолжать применение; false если рука пуста / держит не то.
+     */
+    private boolean consumeOne(Player player, EquipmentSlot hand, String expectedItemId) {
         PlayerInventory inv = player.getInventory();
         ItemStack stack = (hand == EquipmentSlot.OFF_HAND) ? inv.getItemInOffHand() : inv.getItemInMainHand();
         if (stack == null || stack.getType().isAir()) {
-            return;
+            return false;
         }
-        if (player.getGameMode().name().equals("CREATIVE")) {
-            return;
+        // Сверяем PDC: за тот же тик игрок мог поменять предмет в руке. Без проверки
+        // мы рискуем списать чужой стак.
+        String currentId = itemManager.getCustomId(stack);
+        if (currentId == null || !currentId.equals(expectedItemId)) {
+            return false;
+        }
+        if (player.getGameMode() == GameMode.CREATIVE) {
+            return true;
         }
         int amount = stack.getAmount();
         if (amount <= 1) {
@@ -198,6 +226,7 @@ public final class HarnessManager {
         } else {
             stack.setAmount(amount - 1);
         }
+        return true;
     }
 
     private void dropOrGive(Player player, Location location, @Nullable String itemId, boolean preferDrop) {

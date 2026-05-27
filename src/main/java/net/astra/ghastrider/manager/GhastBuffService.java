@@ -39,7 +39,7 @@ public final class GhastBuffService {
 
     /**
      * Применить баффы согласно тиру упряжки. Перед применением гарантированно
-     * вызывается {@link #clear(Ghast)}, чтобы исключить дублирование модификаторов.
+     * вызывается {@link #clear(HappyGhast)}, чтобы исключить дублирование модификаторов.
      */
     public void apply(HappyGhast ghast, HarnessConfig hc) {
         clear(ghast);
