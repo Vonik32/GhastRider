@@ -2,6 +2,7 @@ package net.astra.ghastrider.manager;
 
 import net.astra.ghastrider.config.ConfigManager;
 import net.astra.ghastrider.data.GhastData;
+import net.astra.ghastrider.data.PdcKeys;
 import net.astra.ghastrider.util.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
@@ -27,15 +28,17 @@ public final class RideController {
     private final JavaPlugin plugin;
     private final ConfigManager configManager;
     private final GhastData ghastData;
+    private final PdcKeys keys;
     private final MessageUtil messageUtil;
 
     private final Map<UUID, UUID> playerToGhast = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> ghastToPlayer = new ConcurrentHashMap<>();
 
-    public RideController(JavaPlugin plugin, ConfigManager configManager, GhastData ghastData, MessageUtil messageUtil) {
+    public RideController(JavaPlugin plugin, ConfigManager configManager, GhastData ghastData, PdcKeys keys, MessageUtil messageUtil) {
         this.plugin = plugin;
         this.configManager = configManager;
         this.ghastData = ghastData;
+        this.keys = keys;
         this.messageUtil = messageUtil;
     }
 
@@ -43,96 +46,210 @@ public final class RideController {
         if (!ghastData.isManaged(ghast)) {
             return false;
         }
-        if (!ghastData.isOwner(ghast, player) && !player.hasPermission("ghastrider.bypass.owner")) {
-            messageUtil.send(player, "not-owner");
-            return false;
-        }
         if (!player.getPassengers().isEmpty() || player.getVehicle() != null) {
             return false;
         }
 
-        boolean ok = ghast.addPassenger(player);
-        if (!ok) {
-            return false;
-        }
-        UUID playerId = player.getUniqueId();
-        UUID ghastId = ghast.getUniqueId();
-        // Если у этого ghast уже была пара (например, после prune не очищенная) — заменяем атомарно.
-        UUID prevPlayer = ghastToPlayer.put(ghastId, playerId);
-        if (prevPlayer != null && !prevPlayer.equals(playerId)) {
-            playerToGhast.remove(prevPlayer, ghastId);
-        }
-        UUID prevGhast = playerToGhast.put(playerId, ghastId);
-        if (prevGhast != null && !prevGhast.equals(ghastId)) {
-            ghastToPlayer.remove(prevGhast, playerId);
+        boolean isOwner = ghastData.isOwner(ghast, player) || player.hasPermission("ghastrider.bypass.owner");
+
+        // Gather current real riders
+        java.util.List<Player> realRiders = new java.util.ArrayList<>();
+        for (Entity e : ghast.getPassengers()) {
+            if (e instanceof Player p && !p.equals(player)) {
+                realRiders.add(p);
+            }
         }
 
-        // Managed Гаст всегда с aware=false; пилот работает через ванильную упряжку (body slot).
-        ghast.setTarget(null);
+        // Check if owner is already riding
+        boolean ownerAlreadyRiding = false;
+        UUID ownerId = ghastData.getOwner(ghast);
+        if (ownerId != null) {
+            for (Player p : realRiders) {
+                if (p.getUniqueId().equals(ownerId)) {
+                    ownerAlreadyRiding = true;
+                    break;
+                }
+            }
+        }
 
+        if (isOwner) {
+            if (realRiders.size() >= 4) {
+                return false;
+            }
+            // Put owner at the very front
+            realRiders.add(0, player);
+        } else {
+            // Non-owner seat capacity limit check:
+            // If owner is riding, total real players can be 4.
+            // If owner is not riding, we have a dummy at index 0, so max real passenger seats is 3.
+            int maxCapacity = ownerAlreadyRiding ? 4 : 3;
+            if (realRiders.size() >= maxCapacity) {
+                return false;
+            }
+            realRiders.add(player);
+        }
+
+        rebuildPassengers(ghast, realRiders);
         return true;
     }
 
-    /**
-     * Принудительно ссадить игрока (логаут, команда, ошибка).
-     */
-    public void dismount(Player player) {
-        UUID playerId = player.getUniqueId();
-        UUID ghastId = playerToGhast.remove(playerId);
-        if (ghastId == null) {
-            // На случай если в map нет, но физически сидит — всё равно очистим vehicle.
-            Entity vehicle = player.getVehicle();
-            if (vehicle instanceof HappyGhast g) {
-                g.removePassenger(player);
-                // Удаляем только если запись действительно указывает на этого игрока.
-                ghastToPlayer.remove(g.getUniqueId(), playerId);
-                resetGhast(g);
-            }
-            return;
-        }
-        // Удаляем строго свою пару: ghastId -> playerId.
-        ghastToPlayer.remove(ghastId, playerId);
+    public boolean mountPassenger(Player player, HappyGhast ghast) {
+        // mount handles passenger mounting automatically based on owner UUID
+        return mount(player, ghast);
+    }
 
-        HappyGhast ghast = findGhast(ghastId);
-        if (ghast != null) {
-            ghast.removePassenger(player);
-            resetGhast(ghast);
-        } else if (player.getVehicle() instanceof HappyGhast g) {
-            g.removePassenger(player);
-            resetGhast(g);
+    private Entity spawnDummySeat(HappyGhast ghast) {
+        return ghast.getWorld().spawn(ghast.getLocation(), org.bukkit.entity.ArmorStand.class, as -> {
+            as.setInvisible(true);
+            as.setMarker(true);
+            as.setSmall(true);
+            as.setGravity(false);
+            as.getPersistentDataContainer().set(keys.managed, org.bukkit.persistence.PersistentDataType.BYTE, (byte) 2);
+        });
+    }
+
+    private boolean isDummySeat(Entity entity) {
+        return entity instanceof org.bukkit.entity.ArmorStand && 
+               entity.getPersistentDataContainer().has(keys.managed, org.bukkit.persistence.PersistentDataType.BYTE);
+    }
+
+    public void cleanUpDummies(HappyGhast ghast) {
+        java.util.List<Entity> passengers = new java.util.ArrayList<>(ghast.getPassengers());
+        boolean hasRealPlayer = false;
+        for (Entity e : passengers) {
+            if (e instanceof Player) {
+                hasRealPlayer = true;
+                break;
+            }
+        }
+        if (!hasRealPlayer) {
+            for (Entity e : passengers) {
+                if (isDummySeat(e)) {
+                    ghast.removePassenger(e);
+                    e.remove();
+                }
+            }
         }
     }
 
-    /**
-     * Если на гасте кто-то сидит — ссадить (используется при removeHarness).
-     */
+    public void dismount(Player player) {
+        Entity vehicle = player.getVehicle();
+        if (!(vehicle instanceof HappyGhast ghast)) {
+            UUID ghastId = playerToGhast.remove(player.getUniqueId());
+            if (ghastId != null) {
+                ghastToPlayer.remove(ghastId, player.getUniqueId());
+                HappyGhast g = findGhast(ghastId);
+                if (g != null) {
+                    notifyDismounted(player, g);
+                }
+            }
+            return;
+        }
+        notifyDismounted(player, ghast);
+    }
+
     public void dismountIfRiding(HappyGhast ghast) {
         UUID ghastId = ghast.getUniqueId();
         UUID playerId = ghastToPlayer.remove(ghastId);
         if (playerId != null) {
             playerToGhast.remove(playerId, ghastId);
         }
-        for (Entity passenger : new HashSet<>(ghast.getPassengers())) {
+        for (Entity passenger : new java.util.HashSet<>(ghast.getPassengers())) {
             ghast.removePassenger(passenger);
+            if (isDummySeat(passenger)) {
+                passenger.remove();
+            }
         }
         resetGhast(ghast);
     }
 
-    /**
-     * Синхронизация с EntityDismountEvent — игрок слез сам.
-     */
     public void notifyDismounted(Player player, Entity vehicle) {
-        UUID playerId = player.getUniqueId();
-        UUID expectedGhast = playerToGhast.remove(playerId);
-        if (expectedGhast != null) {
-            ghastToPlayer.remove(expectedGhast, playerId);
+        if (vehicle instanceof HappyGhast ghast) {
+            java.util.List<Player> realRiders = new java.util.ArrayList<>();
+            for (Entity e : ghast.getPassengers()) {
+                if (e instanceof Player p && !p.equals(player)) {
+                    realRiders.add(p);
+                }
+            }
+            rebuildPassengers(ghast, realRiders);
         }
-        if (vehicle instanceof HappyGhast g) {
-            // Удалим только если запись действительно указывает на этого игрока,
-            // чтобы не выбить чужую валидную пару.
-            ghastToPlayer.remove(g.getUniqueId(), playerId);
-            resetGhast(g);
+    }
+
+    private void rebuildPassengers(HappyGhast ghast, java.util.List<Player> realRiders) {
+        java.util.List<Entity> oldPassengers = new java.util.ArrayList<>(ghast.getPassengers());
+        for (Entity e : oldPassengers) {
+            ghast.removePassenger(e);
         }
+        for (Entity e : oldPassengers) {
+            if (isDummySeat(e)) {
+                e.remove();
+            }
+        }
+
+        if (realRiders.isEmpty()) {
+            UUID ghastId = ghast.getUniqueId();
+            UUID driverId = ghastToPlayer.remove(ghastId);
+            if (driverId != null) {
+                playerToGhast.remove(driverId, ghastId);
+            }
+            resetGhast(ghast);
+            return;
+        }
+
+        UUID ownerId = ghastData.getOwner(ghast);
+        Player ownerRider = null;
+        if (ownerId != null) {
+            for (Player p : realRiders) {
+                if (p.getUniqueId().equals(ownerId)) {
+                    ownerRider = p;
+                    break;
+                }
+            }
+        }
+
+        if (ownerRider != null) {
+            realRiders.remove(ownerRider);
+            realRiders.add(0, ownerRider);
+
+            UUID ghastId = ghast.getUniqueId();
+            UUID prevDriver = ghastToPlayer.put(ghastId, ownerRider.getUniqueId());
+            if (prevDriver != null && !prevDriver.equals(ownerRider.getUniqueId())) {
+                playerToGhast.remove(prevDriver, ghastId);
+            }
+            UUID prevGhast = playerToGhast.put(ownerRider.getUniqueId(), ghastId);
+            if (prevGhast != null && !prevGhast.equals(ghastId)) {
+                ghastToPlayer.remove(prevGhast, ownerRider.getUniqueId());
+            }
+
+            for (Player p : realRiders) {
+                ghast.addPassenger(p);
+            }
+
+            if (configManager.getFlightSettings().disableGravityWhenRidden()) {
+                ghast.setGravity(false);
+            } else {
+                ghast.setGravity(true);
+            }
+        } else {
+            UUID ghastId = ghast.getUniqueId();
+            UUID prevDriver = ghastToPlayer.remove(ghastId);
+            if (prevDriver != null) {
+                playerToGhast.remove(prevDriver, ghastId);
+            }
+
+            Entity dummy = spawnDummySeat(ghast);
+            if (dummy != null) {
+                ghast.addPassenger(dummy);
+            }
+
+            for (Player p : realRiders) {
+                ghast.addPassenger(p);
+            }
+
+            resetGhast(ghast);
+        }
+
+        ghast.setTarget(null);
     }
 
     private void resetGhast(HappyGhast ghast) {

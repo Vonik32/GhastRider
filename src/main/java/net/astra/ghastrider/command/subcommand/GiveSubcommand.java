@@ -84,7 +84,9 @@ public final class GiveSubcommand implements Subcommand {
             }
         }
 
+        String verb = amount == 1 ? "Выдана" : "Выдано";
         messageUtil.send(sender, "give-success",
+                MessageUtil.placeholder("verb", verb),
                 MessageUtil.placeholder("amount", String.valueOf(amount)),
                 MessageUtil.placeholder("item", getFormattedItemName(itemId, amount)),
                 MessageUtil.placeholder("player", target.getName()));

@@ -87,6 +87,11 @@ public final class HarnessInteractListener implements Listener {
 
         // Managed Гаст: всё, что не от владельца — отменяется.
         if (!owner && !bypass) {
+            if (handEmpty) {
+                event.setCancelled(true);
+                rideController.mount(player, ghast);
+                return;
+            }
             event.setCancelled(true);
             messageUtil.send(player, "not-owner");
             return;

@@ -64,7 +64,7 @@ public final class GhastRiderPlugin extends JavaPlugin {
 
         // 5. Менеджеры геймплея.
         buffService = new GhastBuffService(this, configManager, ghastData, pdcKeys);
-        rideController = new RideController(this, configManager, ghastData, messageUtil);
+        rideController = new RideController(this, configManager, ghastData, pdcKeys, messageUtil);
         harnessManager = new HarnessManager(this, configManager, itemManager,
                 ghastData, buffService, rideController, messageUtil);
 

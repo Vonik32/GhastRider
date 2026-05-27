@@ -60,19 +60,19 @@ public final class InfoSubcommand implements Subcommand {
         if (tier != null) {
             switch (tier) {
                 case BASIC:
-                    harnessUsed = "<gradient:#c0c0c0:#ffffff><b>базовую упряжку</b></gradient>";
+                    harnessUsed = "<gradient:#c0c0c0:#ffffff><b>Обычная</b></gradient>";
                     break;
                 case IRON:
-                    harnessUsed = "<gradient:#cfd8dc:#90a4ae><b>железную упряжку</b></gradient>";
+                    harnessUsed = "<gradient:#cfd8dc:#90a4ae><b>Железная</b></gradient>";
                     break;
                 case GOLD:
-                    harnessUsed = "<gradient:#ffe066:#ffb300><b>золотую упряжку</b></gradient>";
+                    harnessUsed = "<gradient:#ffe066:#ffb300><b>Золотая</b></gradient>";
                     break;
                 case DIAMOND:
-                    harnessUsed = "<gradient:#5cdcff:#a0f0ff><b>алмазную упряжку</b></gradient>";
+                    harnessUsed = "<gradient:#5cdcff:#a0f0ff><b>Алмазная</b></gradient>";
                     break;
                 case NETHERITE:
-                    harnessUsed = "<gradient:#5d4037:#ff6e40><b>незеритовую упряжку</b></gradient>";
+                    harnessUsed = "<gradient:#5d4037:#ff6e40><b>Незеритовая</b></gradient>";
                     break;
             }
         }
