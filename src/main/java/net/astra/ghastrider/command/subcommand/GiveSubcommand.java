@@ -86,9 +86,51 @@ public final class GiveSubcommand implements Subcommand {
 
         messageUtil.send(sender, "give-success",
                 MessageUtil.placeholder("amount", String.valueOf(amount)),
-                MessageUtil.placeholder("item", itemId),
+                MessageUtil.placeholder("item", getFormattedItemName(itemId, amount)),
                 MessageUtil.placeholder("player", target.getName()));
         return true;
+    }
+
+    private String getFormattedItemName(String itemId, int amount) {
+        int lastDigit = amount % 10;
+        int lastTwoDigits = amount % 100;
+        boolean isOne = (lastDigit == 1 && lastTwoDigits != 11);
+        boolean isFew = (lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 10 || lastTwoDigits >= 20));
+
+        switch (itemId) {
+            case "base_harness":
+                String baseWord = isOne ? "базовая упряжка" : (isFew ? "базовые упряжки" : "базовых упряжек");
+                return "<gradient:#c0c0c0:#ffffff><b>" + baseWord + "</b></gradient>";
+            case "iron_harness":
+                String ironWord = isOne ? "железная упряжка" : (isFew ? "железные упряжки" : "железных упряжек");
+                return "<gradient:#cfd8dc:#90a4ae><b>" + ironWord + "</b></gradient>";
+            case "gold_harness":
+                String goldWord = isOne ? "золотая упряжка" : (isFew ? "золотые упряжки" : "золотых упряжек");
+                return "<gradient:#ffe066:#ffb300><b>" + goldWord + "</b></gradient>";
+            case "diamond_harness":
+                String diamondWord = isOne ? "алмазная упряжка" : (isFew ? "алмазные упряжки" : "алмазных упряжек");
+                return "<gradient:#5cdcff:#a0f0ff><b>" + diamondWord + "</b></gradient>";
+            case "netherite_harness":
+                String netheriteWord = isOne ? "незеритовая упряжка" : (isFew ? "незеритовые упряжки" : "незеритовых упряжек");
+                return "<gradient:#5d4037:#ff6e40><b>" + netheriteWord + "</b></gradient>";
+            case "essence_speed_1":
+                String speed1 = isOne ? "эссенция скорости I" : (isFew ? "эссенции скорости I" : "эссенций скорости I");
+                return "<#7ee8ff><b>" + speed1 + "</b>";
+            case "essence_speed_2":
+                String speed2 = isOne ? "эссенция скорости II" : (isFew ? "эссенции скорости II" : "эссенций скорости II");
+                return "<#00bcd4><b>" + speed2 + "</b>";
+            case "essence_regen_1":
+                String regen1 = isOne ? "эссенция регенерации I" : (isFew ? "эссенции регенерации I" : "эссенций регенерации I");
+                return "<#ff8aa3><b>" + regen1 + "</b>";
+            case "essence_regen_2":
+                String regen2 = isOne ? "эссенция регенерации II" : (isFew ? "эссенции регенерации II" : "эссенций регенерации II");
+                return "<#e91e63><b>" + regen2 + "</b>";
+            case "essence_fire_1":
+                String fire1 = isOne ? "эссенция пламени I" : (isFew ? "эссенции пламени I" : "эссенций пламени I");
+                return "<#ff7043><b>" + fire1 + "</b>";
+            default:
+                return itemId;
+        }
     }
 
     @Override

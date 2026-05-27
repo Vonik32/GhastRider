@@ -51,10 +51,35 @@ public final class InfoSubcommand implements Subcommand {
         HarnessTier tier = ghastData.getTier(ghast);
         OfflinePlayer owner = ownerId == null ? null : Bukkit.getOfflinePlayer(ownerId);
         String ownerName = (owner == null || owner.getName() == null) ? "?" : owner.getName();
-        String tierName = tier == null ? "?" : tier.name();
+        
+        boolean isActualOwner = ownerId != null && ownerId.equals(player.getUniqueId());
+        String ownerColor = isActualOwner ? "<green>" : "<red>";
+        String ownerFormatted = ownerColor + ownerName + (isActualOwner ? "</green>" : "</red>");
+        
+        String harnessUsed = "?";
+        if (tier != null) {
+            switch (tier) {
+                case BASIC:
+                    harnessUsed = "<gradient:#c0c0c0:#ffffff><b>базовую упряжку</b></gradient>";
+                    break;
+                case IRON:
+                    harnessUsed = "<gradient:#cfd8dc:#90a4ae><b>железную упряжку</b></gradient>";
+                    break;
+                case GOLD:
+                    harnessUsed = "<gradient:#ffe066:#ffb300><b>золотую упряжку</b></gradient>";
+                    break;
+                case DIAMOND:
+                    harnessUsed = "<gradient:#5cdcff:#a0f0ff><b>алмазную упряжку</b></gradient>";
+                    break;
+                case NETHERITE:
+                    harnessUsed = "<gradient:#5d4037:#ff6e40><b>незеритовую упряжку</b></gradient>";
+                    break;
+            }
+        }
+        
         messageUtil.send(player, "info-format",
-                MessageUtil.placeholder("owner", ownerName),
-                MessageUtil.placeholder("tier", tierName));
+                MessageUtil.placeholder("owner", ownerFormatted),
+                MessageUtil.placeholder("tier", harnessUsed));
         return true;
     }
 }
