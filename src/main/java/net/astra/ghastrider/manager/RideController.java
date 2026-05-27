@@ -33,6 +33,8 @@ public final class RideController {
 
     private final Map<UUID, UUID> playerToGhast = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> ghastToPlayer = new ConcurrentHashMap<>();
+    private final Set<UUID> mountBypass = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> managedGhasts = ConcurrentHashMap.newKeySet();
 
     public RideController(JavaPlugin plugin, ConfigManager configManager, GhastData ghastData, PdcKeys keys, MessageUtil messageUtil) {
         this.plugin = plugin;
@@ -104,13 +106,16 @@ public final class RideController {
             as.setMarker(true);
             as.setSmall(true);
             as.setGravity(false);
+            as.setPersistent(false);
             as.getPersistentDataContainer().set(keys.managed, org.bukkit.persistence.PersistentDataType.BYTE, (byte) 2);
         });
     }
 
     private boolean isDummySeat(Entity entity) {
-        return entity instanceof org.bukkit.entity.ArmorStand && 
-               entity.getPersistentDataContainer().has(keys.managed, org.bukkit.persistence.PersistentDataType.BYTE);
+        if (!(entity instanceof org.bukkit.entity.ArmorStand)) return false;
+        Byte val = entity.getPersistentDataContainer()
+            .get(keys.managed, org.bukkit.persistence.PersistentDataType.BYTE);
+        return val != null && val == (byte) 2;
     }
 
     public void cleanUpDummies(HappyGhast ghast) {
@@ -156,6 +161,9 @@ public final class RideController {
         }
         for (Entity passenger : new java.util.HashSet<>(ghast.getPassengers())) {
             ghast.removePassenger(passenger);
+            if (passenger instanceof Player p) {
+                playerToGhast.remove(p.getUniqueId(), ghastId);
+            }
             if (isDummySeat(passenger)) {
                 passenger.remove();
             }
@@ -186,6 +194,13 @@ public final class RideController {
             }
         }
 
+        // Clean up old players in playerToGhast for this ghast
+        for (Entity e : oldPassengers) {
+            if (e instanceof Player p) {
+                playerToGhast.remove(p.getUniqueId(), ghast.getUniqueId());
+            }
+        }
+
         if (realRiders.isEmpty()) {
             UUID ghastId = ghast.getUniqueId();
             UUID driverId = ghastToPlayer.remove(ghastId);
@@ -207,6 +222,11 @@ public final class RideController {
             }
         }
 
+        // Map all current real riders to this ghast
+        for (Player p : realRiders) {
+            playerToGhast.put(p.getUniqueId(), ghast.getUniqueId());
+        }
+
         if (ownerRider != null) {
             realRiders.remove(ownerRider);
             realRiders.add(0, ownerRider);
@@ -222,7 +242,12 @@ public final class RideController {
             }
 
             for (Player p : realRiders) {
-                ghast.addPassenger(p);
+                mountBypass.add(p.getUniqueId());
+                try {
+                    ghast.addPassenger(p);
+                } finally {
+                    mountBypass.remove(p.getUniqueId());
+                }
             }
 
             if (configManager.getFlightSettings().disableGravityWhenRidden()) {
@@ -243,7 +268,12 @@ public final class RideController {
             }
 
             for (Player p : realRiders) {
-                ghast.addPassenger(p);
+                mountBypass.add(p.getUniqueId());
+                try {
+                    ghast.addPassenger(p);
+                } finally {
+                    mountBypass.remove(p.getUniqueId());
+                }
             }
 
             resetGhast(ghast);
@@ -324,6 +354,43 @@ public final class RideController {
     public void clearAll() {
         playerToGhast.clear();
         ghastToPlayer.clear();
+    }
+
+    public boolean isBypassingMount(UUID uuid) {
+        return mountBypass.contains(uuid);
+    }
+
+    public void addManagedGhast(HappyGhast ghast) {
+        managedGhasts.add(ghast.getUniqueId());
+    }
+
+    public void removeManagedGhast(HappyGhast ghast) {
+        managedGhasts.remove(ghast.getUniqueId());
+    }
+
+    public java.util.List<HappyGhast> getLoadedManagedGhasts() {
+        java.util.List<HappyGhast> list = new java.util.ArrayList<>();
+        Iterator<UUID> it = managedGhasts.iterator();
+        while (it.hasNext()) {
+            UUID id = it.next();
+            Entity entity = Bukkit.getEntity(id);
+            if (entity instanceof HappyGhast ghast && ghastData.isManaged(ghast) && !ghast.isDead() && ghast.isValid()) {
+                list.add(ghast);
+            } else {
+                it.remove();
+            }
+        }
+        return list;
+    }
+
+    public void registerLoadedGhasts() {
+        for (var world : Bukkit.getWorlds()) {
+            for (HappyGhast ghast : world.getEntitiesByClass(HappyGhast.class)) {
+                if (ghast != null && !ghast.isDead() && ghast.isValid() && ghastData.isManaged(ghast)) {
+                    managedGhasts.add(ghast.getUniqueId());
+                }
+            }
+        }
     }
 
     public JavaPlugin getPlugin() {

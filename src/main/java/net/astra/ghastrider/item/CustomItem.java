@@ -14,7 +14,10 @@ public record CustomItem(
         int customModelData,
         String displayName,
         List<String> lore,
-        boolean glow
+        boolean glow,
+        String nameSingular,
+        String nameFew,
+        String nameMany
 ) {
     public CustomItem {
         if (id == null || id.isBlank()) {
@@ -25,5 +28,8 @@ public record CustomItem(
         }
         // Defensive copy.
         lore = lore == null ? List.of() : List.copyOf(lore);
+        nameSingular = nameSingular == null ? displayName : nameSingular;
+        nameFew = nameFew == null ? displayName : nameFew;
+        nameMany = nameMany == null ? displayName : nameMany;
     }
 }

@@ -25,10 +25,12 @@ public final class GhastProtectionListener implements Listener {
 
     private final ConfigManager configManager;
     private final GhastData ghastData;
+    private final net.astra.ghastrider.manager.RideController rideController;
 
-    public GhastProtectionListener(ConfigManager configManager, GhastData ghastData) {
+    public GhastProtectionListener(ConfigManager configManager, GhastData ghastData, net.astra.ghastrider.manager.RideController rideController) {
         this.configManager = configManager;
         this.ghastData = ghastData;
+        this.rideController = rideController;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -136,6 +138,9 @@ public final class GhastProtectionListener implements Listener {
         }
         if (!(event.getEntity() instanceof Player player)) {
             event.setCancelled(true);
+            return;
+        }
+        if (rideController.isBypassingMount(player.getUniqueId())) {
             return;
         }
         boolean isOwner = ghastData.isOwner(ghast, player);

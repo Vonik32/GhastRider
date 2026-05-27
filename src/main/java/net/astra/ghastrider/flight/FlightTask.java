@@ -64,25 +64,13 @@ public final class FlightTask extends BukkitRunnable {
         }
 
         // Поддержание состояния managed-Гастов: AI выключен, цели — нет.
-        // Iterate over a snapshot to avoid CME, when world plugin events spawn entities.
-        for (var world : Bukkit.getWorlds()) {
-            for (HappyGhast ghast : world.getEntitiesByClass(HappyGhast.class)) {
-                if (ghast == null || ghast.isDead() || !ghast.isValid()) {
-                    continue;
-                }
-                if (!ghastData.isManaged(ghast)) {
-                    continue;
-                }
-                if (ghast.isAware()) {
-                    ghast.setAware(false);
-                }
-                if (ghast.getTarget() != null) {
-                    ghast.setTarget(null);
-                }
+        for (HappyGhast ghast : rideController.getLoadedManagedGhasts()) {
+            if (configManager.getBehaviorSettings().setAwareFalse() && ghast.isAware()) {
+                ghast.setAware(false);
+            }
+            if (ghast.getTarget() != null) {
+                ghast.setTarget(null);
             }
         }
     }
 }
-
-
-

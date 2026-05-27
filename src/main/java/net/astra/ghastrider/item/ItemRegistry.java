@@ -67,8 +67,11 @@ public final class ItemRegistry {
             String displayName = s.getString("display-name", id);
             List<String> lore = s.getStringList("lore");
             boolean glow = s.getBoolean("glow", false);
+            String nameSingular = s.getString("name-singular", displayName);
+            String nameFew = s.getString("name-few", displayName);
+            String nameMany = s.getString("name-many", displayName);
 
-            CustomItem item = new CustomItem(id, material, cmd, displayName, lore, glow);
+            CustomItem item = new CustomItem(id, material, cmd, displayName, lore, glow, nameSingular, nameFew, nameMany);
             items.put(id, item);
         }
 

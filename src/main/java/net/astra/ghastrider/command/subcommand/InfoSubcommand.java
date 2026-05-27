@@ -49,33 +49,26 @@ public final class InfoSubcommand implements Subcommand {
         }
         UUID ownerId = ghastData.getOwner(ghast);
         HarnessTier tier = ghastData.getTier(ghast);
-        OfflinePlayer owner = ownerId == null ? null : Bukkit.getOfflinePlayer(ownerId);
-        String ownerName = (owner == null || owner.getName() == null) ? "?" : owner.getName();
+        
+        String ownerName = ghastData.getOwnerName(ghast);
+        if (ownerName == null && ownerId != null) {
+            Player onlineOwner = Bukkit.getPlayer(ownerId);
+            if (onlineOwner != null) {
+                ownerName = onlineOwner.getName();
+            } else {
+                OfflinePlayer offline = Bukkit.getOfflinePlayer(ownerId);
+                ownerName = offline.getName() != null ? offline.getName() : "?";
+            }
+        }
+        if (ownerName == null) {
+            ownerName = "?";
+        }
         
         boolean isActualOwner = ownerId != null && ownerId.equals(player.getUniqueId());
         String ownerColor = isActualOwner ? "<green>" : "<red>";
         String ownerFormatted = ownerColor + ownerName + (isActualOwner ? "</green>" : "</red>");
         
-        String harnessUsed = "?";
-        if (tier != null) {
-            switch (tier) {
-                case BASIC:
-                    harnessUsed = "<gradient:#c0c0c0:#ffffff><b>Обычная</b></gradient>";
-                    break;
-                case IRON:
-                    harnessUsed = "<gradient:#cfd8dc:#90a4ae><b>Железная</b></gradient>";
-                    break;
-                case GOLD:
-                    harnessUsed = "<gradient:#ffe066:#ffb300><b>Золотая</b></gradient>";
-                    break;
-                case DIAMOND:
-                    harnessUsed = "<gradient:#5cdcff:#a0f0ff><b>Алмазная</b></gradient>";
-                    break;
-                case NETHERITE:
-                    harnessUsed = "<gradient:#5d4037:#ff6e40><b>Незеритовая</b></gradient>";
-                    break;
-            }
-        }
+        String harnessUsed = tier == null ? "?" : tier.getDisplayName();
         
         messageUtil.send(player, "info-format",
                 MessageUtil.placeholder("owner", ownerFormatted),

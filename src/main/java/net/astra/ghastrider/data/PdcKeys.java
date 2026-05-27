@@ -9,6 +9,7 @@ import org.bukkit.plugin.Plugin;
 public final class PdcKeys {
 
     public final NamespacedKey ownerUuid;
+    public final NamespacedKey ownerName;
     public final NamespacedKey harnessTier;
     public final NamespacedKey harnessItemId;
     public final NamespacedKey managed;
@@ -21,8 +22,13 @@ public final class PdcKeys {
     public final NamespacedKey customItem;
     public final NamespacedKey itemVersion;
 
+    // Buff trackers.
+    public final NamespacedKey hasAppliedRegen;
+    public final NamespacedKey hasAppliedFireResist;
+
     public PdcKeys(Plugin plugin) {
         this.ownerUuid = new NamespacedKey(plugin, "owner_uuid");
+        this.ownerName = new NamespacedKey(plugin, "owner_name");
         this.harnessTier = new NamespacedKey(plugin, "harness_tier");
         this.harnessItemId = new NamespacedKey(plugin, "harness_item_id");
         this.managed = new NamespacedKey(plugin, "managed");
@@ -31,5 +37,7 @@ public final class PdcKeys {
         this.attrMovementSpeed = new NamespacedKey(plugin, "attr_movement_speed");
         this.customItem = new NamespacedKey(plugin, "custom_item");
         this.itemVersion = new NamespacedKey(plugin, "item_version");
+        this.hasAppliedRegen = new NamespacedKey(plugin, "has_applied_regen");
+        this.hasAppliedFireResist = new NamespacedKey(plugin, "has_applied_fire_resist");
     }
 }

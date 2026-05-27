@@ -35,15 +35,17 @@ public final class ProtocolGlowingTask {
     private final JavaPlugin plugin;
     private final ConfigManager configManager;
     private final GhastData ghastData;
+    private final net.astra.ghastrider.manager.RideController rideController;
     private final ProtocolManager protocolManager;
 
     private BukkitTask task;
     private boolean warnedNoProtocolLib;
 
-    public ProtocolGlowingTask(JavaPlugin plugin, ConfigManager configManager, GhastData ghastData) {
+    public ProtocolGlowingTask(JavaPlugin plugin, ConfigManager configManager, GhastData ghastData, net.astra.ghastrider.manager.RideController rideController) {
         this.plugin = plugin;
         this.configManager = configManager;
         this.ghastData = ghastData;
+        this.rideController = rideController;
         ProtocolManager pm = null;
         try {
             pm = ProtocolLibrary.getProtocolManager();
@@ -91,28 +93,20 @@ public final class ProtocolGlowingTask {
         if (protocolManager == null) {
             return;
         }
-        for (var world : Bukkit.getWorlds()) {
-            for (HappyGhast ghast : world.getEntitiesByClass(HappyGhast.class)) {
-                if (ghast == null || ghast.isDead() || !ghast.isValid()) {
-                    continue;
-                }
-                if (!ghastData.isManaged(ghast)) {
-                    continue;
-                }
-                UUID ownerId = ghastData.getOwner(ghast);
-                if (ownerId == null) {
-                    continue;
-                }
-                Player owner = Bukkit.getPlayer(ownerId);
-                if (owner == null || !owner.isOnline()) {
-                    continue;
-                }
-                if (!owner.getWorld().equals(world)) {
-                    continue;
-                }
-
-                sendGlowingPacket(owner, ghast);
+        for (HappyGhast ghast : rideController.getLoadedManagedGhasts()) {
+            UUID ownerId = ghastData.getOwner(ghast);
+            if (ownerId == null) {
+                continue;
             }
+            Player owner = Bukkit.getPlayer(ownerId);
+            if (owner == null || !owner.isOnline()) {
+                continue;
+            }
+            if (!owner.getWorld().equals(ghast.getWorld())) {
+                continue;
+            }
+
+            sendGlowingPacket(owner, ghast);
         }
     }
 

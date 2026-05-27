@@ -65,6 +65,7 @@ public final class GhastRiderPlugin extends JavaPlugin {
         // 5. Менеджеры геймплея.
         buffService = new GhastBuffService(this, configManager, ghastData, pdcKeys);
         rideController = new RideController(this, configManager, ghastData, pdcKeys, messageUtil);
+        rideController.registerLoadedGhasts();
         harnessManager = new HarnessManager(this, configManager, itemManager,
                 ghastData, buffService, rideController, messageUtil);
 
@@ -72,11 +73,11 @@ public final class GhastRiderPlugin extends JavaPlugin {
         PluginManager pm = Bukkit.getPluginManager();
         pm.registerEvents(new HarnessInteractListener(configManager, itemManager,
                 ghastData, harnessManager, rideController, messageUtil), this);
-        pm.registerEvents(new GhastProtectionListener(configManager, ghastData), this);
+        pm.registerEvents(new GhastProtectionListener(configManager, ghastData, rideController), this);
         pm.registerEvents(new GhastAIListener(configManager, ghastData), this);
         pm.registerEvents(new GhastDeathListener(ghastData, harnessManager, rideController), this);
-        pm.registerEvents(new ChunkLifecycleListener(ghastData, buffService), this);
-        pm.registerEvents(new PlayerLifecycleListener(rideController), this);
+        pm.registerEvents(new ChunkLifecycleListener(ghastData, buffService, rideController), this);
+        pm.registerEvents(new PlayerLifecycleListener(this, rideController), this);
         pm.registerEvents(new RecipeGuardListener(this, itemManager, recipeManager.getRegistry()), this);
 
         // 7. Тик полёта.
@@ -84,7 +85,7 @@ public final class GhastRiderPlugin extends JavaPlugin {
         flightTask.start();
 
         // 8. Owner-only glowing (через ProtocolLib).
-        glowingTask = new ProtocolGlowingTask(this, configManager, ghastData);
+        glowingTask = new ProtocolGlowingTask(this, configManager, ghastData, rideController);
         glowingTask.start();
 
         // 9. Команда (создаём после всех зависимостей, чтобы reload получил glowing task).
@@ -112,8 +113,8 @@ public final class GhastRiderPlugin extends JavaPlugin {
                 if (rideController.isRiding(p)) {
                     try {
                         rideController.dismount(p);
-                    } catch (Throwable t) {
-                        getLogger().warning("Ошибка при dismount игрока " + p.getName() + ": " + t.getMessage());
+                    } catch (Exception e) {
+                        getLogger().warning("Ошибка при dismount игрока " + p.getName() + ": " + e.getMessage());
                     }
                 }
             }

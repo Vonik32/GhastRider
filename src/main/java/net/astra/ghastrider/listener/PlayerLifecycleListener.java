@@ -17,9 +17,11 @@ import org.bukkit.event.player.PlayerQuitEvent;
  */
 public final class PlayerLifecycleListener implements Listener {
 
+    private final org.bukkit.plugin.java.JavaPlugin plugin;
     private final RideController rideController;
 
-    public PlayerLifecycleListener(RideController rideController) {
+    public PlayerLifecycleListener(org.bukkit.plugin.java.JavaPlugin plugin, RideController rideController) {
+        this.plugin = plugin;
         this.rideController = rideController;
     }
 
@@ -45,7 +47,8 @@ public final class PlayerLifecycleListener implements Listener {
             return;
         }
         Entity vehicle = event.getDismounted();
-        rideController.notifyDismounted(player, vehicle);
+        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> 
+            rideController.notifyDismounted(player, vehicle));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

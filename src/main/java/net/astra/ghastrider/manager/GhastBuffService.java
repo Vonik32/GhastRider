@@ -44,6 +44,7 @@ public final class GhastBuffService {
     public void apply(HappyGhast ghast, HarnessConfig hc) {
         clear(ghast);
 
+        org.bukkit.persistence.PersistentDataContainer pdc = ghast.getPersistentDataContainer();
         if (hc.regenerationEnabled()) {
             int duration = hc.hasInfiniteRegeneration() ? INFINITE_DURATION : hc.regenerationDurationTicks();
             ghast.addPotionEffect(new PotionEffect(
@@ -53,6 +54,7 @@ public final class GhastBuffService {
                     true,
                     false,
                     true));
+            pdc.set(keys.hasAppliedRegen, org.bukkit.persistence.PersistentDataType.BYTE, (byte) 1);
         }
 
         if (hc.fireResistance()) {
@@ -63,6 +65,7 @@ public final class GhastBuffService {
                     true,
                     false,
                     true));
+            pdc.set(keys.hasAppliedFireResist, org.bukkit.persistence.PersistentDataType.BYTE, (byte) 1);
         }
 
         applyAttributeMultiplier(ghast, Attribute.FLYING_SPEED, keys.attrFlyingSpeed, hc.flyingSpeedMultiplier());
@@ -94,8 +97,15 @@ public final class GhastBuffService {
      * Полная очистка: эффекты, атрибуты, glowing.
      */
     public void clear(HappyGhast ghast) {
-        ghast.removePotionEffect(PotionEffectType.REGENERATION);
-        ghast.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
+        org.bukkit.persistence.PersistentDataContainer pdc = ghast.getPersistentDataContainer();
+        if (pdc.has(keys.hasAppliedRegen, org.bukkit.persistence.PersistentDataType.BYTE)) {
+            ghast.removePotionEffect(PotionEffectType.REGENERATION);
+            pdc.remove(keys.hasAppliedRegen);
+        }
+        if (pdc.has(keys.hasAppliedFireResist, org.bukkit.persistence.PersistentDataType.BYTE)) {
+            ghast.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
+            pdc.remove(keys.hasAppliedFireResist);
+        }
 
         removeAttribute(ghast, Attribute.FLYING_SPEED, keys.attrFlyingSpeed);
         removeAttribute(ghast, Attribute.MOVEMENT_SPEED, keys.attrMovementSpeed);

@@ -33,7 +33,7 @@ public final class ConfigManager {
     private FlightSettings flightSettings;
     private ProtectionSettings protectionSettings;
     private BehaviorSettings behaviorSettings;
-    private Map<String, String> messages = new HashMap<>();
+    private volatile Map<String, String> messages = new HashMap<>();
     private int dataVersion = 1;
 
     public ConfigManager(JavaPlugin plugin) {
@@ -140,13 +140,14 @@ public final class ConfigManager {
                 cfg.getBoolean("behavior.owner-only-glowing", true),
                 Math.max(1, cfg.getInt("behavior.owner-only-glowing-interval-ticks", 10)));
 
-        messages = new HashMap<>();
+        Map<String, String> newMessages = new HashMap<>();
         ConfigurationSection msg = cfg.getConfigurationSection("messages");
         if (msg != null) {
             for (String key : msg.getKeys(false)) {
-                messages.put(key, msg.getString(key, ""));
+                newMessages.put(key, msg.getString(key, ""));
             }
         }
+        messages = java.util.Collections.unmodifiableMap(newMessages);
 
         dataVersion = cfg.getInt("data-version", 1);
 

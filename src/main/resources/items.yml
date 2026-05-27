@@ -14,6 +14,9 @@ items:
     material: SADDLE
     custom-model-data: 1000
     display-name: "<gradient:#c0c0c0:#ffffff><b>Базовая упряжка</b></gradient>"
+    name-singular: "<gradient:#c0c0c0:#ffffff><b>базовая упряжка</b></gradient>"
+    name-few: "<gradient:#c0c0c0:#ffffff><b>базовые упряжки</b></gradient>"
+    name-many: "<gradient:#c0c0c0:#ffffff><b>базовых упряжек</b></gradient>"
     lore:
       - "<gray>Простая сбруя для управления Счастливым Гастом."
       - "<dark_gray>Тир: <white>Базовая</white>"
@@ -25,6 +28,9 @@ items:
     material: SADDLE
     custom-model-data: 1001
     display-name: "<gradient:#cfd8dc:#90a4ae><b>Железная упряжка</b></gradient>"
+    name-singular: "<gradient:#cfd8dc:#90a4ae><b>железная упряжка</b></gradient>"
+    name-few: "<gradient:#cfd8dc:#90a4ae><b>железные упряжки</b></gradient>"
+    name-many: "<gradient:#cfd8dc:#90a4ae><b>железных упряжек</b></gradient>"
     lore:
       - "<gray>Усиленная стальными вставками."
       - "<dark_gray>Тир: <white>Железо</white>"
@@ -36,6 +42,9 @@ items:
     material: SADDLE
     custom-model-data: 1002
     display-name: "<gradient:#ffe066:#ffb300><b>Золотая упряжка</b></gradient>"
+    name-singular: "<gradient:#ffe066:#ffb300><b>золотая упряжка</b></gradient>"
+    name-few: "<gradient:#ffe066:#ffb300><b>золотые упряжки</b></gradient>"
+    name-many: "<gradient:#ffe066:#ffb300><b>золотых упряжек</b></gradient>"
     lore:
       - "<gray>Роскошная и быстрая."
       - "<dark_gray>Тир: <gold>Золото</gold>"
@@ -47,6 +56,9 @@ items:
     material: SADDLE
     custom-model-data: 1003
     display-name: "<gradient:#5cdcff:#a0f0ff><b>Алмазная упряжка</b></gradient>"
+    name-singular: "<gradient:#5cdcff:#a0f0ff><b>алмазная упряжка</b></gradient>"
+    name-few: "<gradient:#5cdcff:#a0f0ff><b>алмазные упряжки</b></gradient>"
+    name-many: "<gradient:#5cdcff:#a0f0ff><b>алмазных упряжек</b></gradient>"
     lore:
       - "<gray>Прочная сбруя для Счастливого Гаста."
       - "<dark_gray>Тир: <aqua>Алмаз</aqua>"
@@ -58,6 +70,9 @@ items:
     material: SADDLE
     custom-model-data: 1004
     display-name: "<gradient:#5d4037:#ff6e40><b>Незеритовая упряжка</b></gradient>"
+    name-singular: "<gradient:#5d4037:#ff6e40><b>незеритовая упряжка</b></gradient>"
+    name-few: "<gradient:#5d4037:#ff6e40><b>незеритовые упряжки</b></gradient>"
+    name-many: "<gradient:#5d4037:#ff6e40><b>незеритовых упряжек</b></gradient>"
     lore:
       - "<gray>Венец инженерной мысли Незера."
       - "<dark_gray>Тир: <#ff6e40>Незерит</#ff6e40>"
@@ -70,6 +85,9 @@ items:
     material: NETHER_STAR
     custom-model-data: 2001
     display-name: "<#7ee8ff><b>Эссенция Скорости I</b>"
+    name-singular: "<#7ee8ff><b>эссенция скорости I</b>"
+    name-few: "<#7ee8ff><b>эссенции скорости I</b>"
+    name-many: "<#7ee8ff><b>эссенций скорости I</b>"
     lore:
       - "<gray>Сгусток ветра."
       - "<dark_gray>Используется в крафте."
@@ -79,6 +97,9 @@ items:
     material: NETHER_STAR
     custom-model-data: 2002
     display-name: "<#00bcd4><b>Эссенция Скорости II</b>"
+    name-singular: "<#00bcd4><b>эссенция скорости II</b>"
+    name-few: "<#00bcd4><b>эссенции скорости II</b>"
+    name-many: "<#00bcd4><b>эссенций скорости II</b>"
     lore:
       - "<gray>Концентрированный ветер."
       - "<dark_gray>Используется в крафте."
@@ -88,6 +109,9 @@ items:
     material: NETHER_STAR
     custom-model-data: 2003
     display-name: "<#ff8aa3><b>Эссенция Регенерации I</b>"
+    name-singular: "<#ff8aa3><b>эссенция регенерации I</b>"
+    name-few: "<#ff8aa3><b>эссенции регенерации I</b>"
+    name-many: "<#ff8aa3><b>эссенций регенерации I</b>"
     lore:
       - "<gray>Тёплый пульс жизни."
       - "<dark_gray>Используется в крафте."
@@ -97,6 +121,9 @@ items:
     material: NETHER_STAR
     custom-model-data: 2004
     display-name: "<#e91e63><b>Эссенция Регенерации II</b>"
+    name-singular: "<#e91e63><b>эссенция регенерации II</b>"
+    name-few: "<#e91e63><b>эссенции регенерации II</b>"
+    name-many: "<#e91e63><b>эссенций регенерации II</b>"
     lore:
       - "<gray>Сильный пульс жизни."
       - "<dark_gray>Используется в крафте."
@@ -106,6 +133,9 @@ items:
     material: NETHER_STAR
     custom-model-data: 2005
     display-name: "<#ff7043><b>Эссенция Пламени I</b>"
+    name-singular: "<#ff7043><b>эссенция пламени I</b>"
+    name-few: "<#ff7043><b>эссенции пламени I</b>"
+    name-many: "<#ff7043><b>эссенций пламени I</b>"
     lore:
       - "<gray>Безопасный жар Незера."
       - "<dark_gray>Используется в крафте."

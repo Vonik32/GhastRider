@@ -3,7 +3,7 @@ version: '${version}'
 main: net.astra.ghastrider.GhastRiderPlugin
 api-version: '1.21'
 authors: [ Rennocki (temdem) ]
-depend: [ProtocolLib]
+softdepend: [ProtocolLib]
 description: Personal rideable Ghast with custom harnesses (standalone, no external item plugins).
 commands:
   ghastrider:

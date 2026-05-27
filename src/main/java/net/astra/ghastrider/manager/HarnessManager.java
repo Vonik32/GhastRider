@@ -50,6 +50,9 @@ public final class HarnessManager {
     private final RideController rideController;
     private final MessageUtil messageUtil;
 
+    private Material cachedVanillaHarness = null;
+    private boolean resolvedHarness = false;
+
     public HarnessManager(JavaPlugin plugin,
                           ConfigManager configManager,
                           ItemManager itemManager,
@@ -93,9 +96,10 @@ public final class HarnessManager {
             return InteractionResult.DENIED_NOT_CUSTOM_ITEM;
         }
 
-        ghastData.apply(ghast, player.getUniqueId(), tier, itemId);
+        ghastData.apply(ghast, player.getUniqueId(), player.getName(), tier, itemId);
         buffService.apply(ghast, hc);
         applyVanillaHarness(ghast);
+        rideController.addManagedGhast(ghast);
 
         messageUtil.send(player, "harness-applied",
                 MessageUtil.placeholder("tier", tier.name()));
@@ -116,6 +120,7 @@ public final class HarnessManager {
         String itemId = ghastData.getHarnessItemId(ghast);
 
         rideController.dismountIfRiding(ghast);
+        rideController.removeManagedGhast(ghast);
 
         buffService.clear(ghast);
         ghastData.clear(ghast);
@@ -291,6 +296,9 @@ public final class HarnessManager {
 
     @Nullable
     private Material resolveVanillaHarnessMaterial() {
+        if (resolvedHarness) {
+            return cachedVanillaHarness;
+        }
         // В 1.21.6+ ванильная упряжка — это цветные *_HARNESS материалы.
         // Берём первый доступный, чтобы не зависеть от конкретного имени.
         String[] candidates = {
@@ -314,11 +322,12 @@ public final class HarnessManager {
         };
         for (String name : candidates) {
             try {
-                Material m = Material.valueOf(name);
-                return m;
+                cachedVanillaHarness = Material.valueOf(name);
+                break;
             } catch (IllegalArgumentException ignored) {
             }
         }
-        return null;
+        resolvedHarness = true;
+        return cachedVanillaHarness;
     }
 }

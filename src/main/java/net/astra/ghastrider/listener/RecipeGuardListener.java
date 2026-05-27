@@ -43,7 +43,8 @@ public final class RecipeGuardListener implements Listener {
             return;
         }
         NamespacedKey key = shaped.getKey();
-        if (!plugin.getName().equalsIgnoreCase(key.getNamespace())) {
+        String expectedNamespace = plugin.getName().toLowerCase(java.util.Locale.ROOT);
+        if (!expectedNamespace.equals(key.getNamespace())) {
             return;
         }
         String idPart = key.getKey();

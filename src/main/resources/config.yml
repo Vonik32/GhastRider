@@ -105,7 +105,7 @@ messages:
   info-format: "<gray>Владелец: <owner> | Уровень упряжки: <tier></gray>"
   info-not-managed: "<gray>Этот Счастливый Гаст не под управлением плагина.</gray>"
   info-no-target: "<red>Посмотрите на Счастливого Гаста.</red>"
-  give-success: "<green><verb> <white>x<amount> <item></white> игроку <yellow><player></yellow>.</green>"
+  give-success: "<green><verb> <white>X<amount> <item></white> игроку <yellow><player></yellow>.</green>"
   give-unknown-item: "<red>Неизвестный предмет: <yellow><item></yellow>. Доступные: <gray><available></gray></red>"
   give-unknown-player: "<red>Игрок не найден.</red>"
   give-usage: "<gray>Использование: /gr give <player> <item_id> [amount]</gray>"

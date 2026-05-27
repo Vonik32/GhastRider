@@ -50,6 +50,11 @@ public final class GhastData {
     }
 
     @Nullable
+    public String getOwnerName(HappyGhast ghast) {
+        return ghast.getPersistentDataContainer().get(keys.ownerName, PersistentDataType.STRING);
+    }
+
+    @Nullable
     public HarnessTier getTier(HappyGhast ghast) {
         String raw = ghast.getPersistentDataContainer().get(keys.harnessTier, PersistentDataType.STRING);
         return HarnessTier.fromName(raw);
@@ -65,10 +70,13 @@ public final class GhastData {
         return v == null ? 0 : v;
     }
 
-    public void apply(HappyGhast ghast, UUID owner, HarnessTier tier, String itemId) {
+    public void apply(HappyGhast ghast, UUID owner, String ownerName, HarnessTier tier, String itemId) {
         PersistentDataContainer pdc = ghast.getPersistentDataContainer();
         pdc.set(keys.managed, PersistentDataType.BYTE, MANAGED_FLAG);
         pdc.set(keys.ownerUuid, PersistentDataType.STRING, owner.toString());
+        if (ownerName != null) {
+            pdc.set(keys.ownerName, PersistentDataType.STRING, ownerName);
+        }
         pdc.set(keys.harnessTier, PersistentDataType.STRING, tier.name());
         pdc.set(keys.harnessItemId, PersistentDataType.STRING, itemId);
         pdc.set(keys.dataVersion, PersistentDataType.INTEGER, currentDataVersion);
@@ -84,6 +92,7 @@ public final class GhastData {
         PersistentDataContainer pdc = ghast.getPersistentDataContainer();
         pdc.remove(keys.managed);
         pdc.remove(keys.ownerUuid);
+        pdc.remove(keys.ownerName);
         pdc.remove(keys.harnessTier);
         pdc.remove(keys.harnessItemId);
         pdc.remove(keys.dataVersion);
