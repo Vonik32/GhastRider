@@ -121,3 +121,22 @@ runs/
 # VS Code and Build outputs
 bin/
 .vscode/
+
+# Secrets, API keys, private credentials, and certificates
+.env
+.env.*
+*.key
+*.pem
+*.keystore
+*.jks
+*.pfx
+*.p12
+credentials.json
+secrets.yml
+auth.json
+token.txt
+local.properties
+/security/
+/secrets/
+/private/
+
